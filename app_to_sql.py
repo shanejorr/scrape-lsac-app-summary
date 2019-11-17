@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 This program takes the data frames of each table and enters them into the SQL database.
 
-@author: Shane
 """
 import pandas as pd
 from sqlalchemy import create_engine
@@ -10,12 +8,12 @@ import app_extract_18 as extract
 import os
 import numpy as np
 
-directory = '2018_applications/eapp_2018/'
+directory = 'applications/eapp_2018/'
 
 ### convert all applications to data frames
-file_list = os.listdir('2018_applications/eapp_2018')
+file_list = os.listdir(directory)
 
-db_tbls = extract.create_dataframe(directory, file_list)
+db_tbls = extract.create_dataframe(directory, file_list[:5])
 
 ### convert the hour working per week to integer and strip non-numbers
 ### can't figure out how to do this within a function or loop

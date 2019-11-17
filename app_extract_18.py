@@ -1,14 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Wed Aug 15 18:20:07 2018
-
 This program takes the Eapp file as input, calls app_to_dict_18 to convert the file
 to a dictionary, then converts the dictionary to a dataframe
 
-Stopping point: convert dates to consistent format
-
-@author: shane
 """
 
 import re
