@@ -1,4 +1,4 @@
-# scrape-lsac-app-summary
+# Scrape LSAT Application Summary PDF Files
 
 PDF scrapper of LSAC application summary.
 
