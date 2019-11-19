@@ -37,7 +37,7 @@ def hours_worked(dataframe_column):
 
     return dataframe_column
 
-def app_to_dict_18(filename):
+def app_to_dict_18(filename, year):
     
     """
     This function extracts information from the long-form application information 
@@ -45,7 +45,7 @@ def app_to_dict_18(filename):
     
     Date created: August 3, 2018
     """
-
+    
     #extract application summary
     summary = extract.deleteDuplicateLines(filename) #, 'Application', 'Personal')
     
@@ -134,30 +134,31 @@ def app_to_dict_18(filename):
     # extract education
     summaryValues['education'] = extract.extract_multi(summary, educationRE, edKeys)
     
-    '''   
-    ###military service:  use seperate dictionary since this will be blank for most students###
-    # note: this is for old years, will not work for 2018
-    #regular expression to extract all military information
-    milRE = re.compile(r"1. Have you served or are you now serving.*\n(.*)\n"
-                       "2. What period.*\n(.*)\n(.*?)\n"
-                       "3. Rank\n(.*?)\n"
-                       "4. Expected military reserve or National Guard.*?\n(.*?)\n")
-    mil = re.search(milRE, summary)
-    #only add military items if person is in the military
-    if mil.group(1)[0] == 'Y':
-        military = {}
-        military['milService'] = 'yes'
-        military['milStart'] = mil.group(2)
-        military['milEnd'] = mil.group(3)
-        military['milRank'] = mil.group(4)
-        military['milReserve'] = mil.group(5)
-        
-        # add dictionary of education values to summary dictionary
-        summaryValues['military'] = military
-    
-    '''
-    # military service for 2018 applications
-    summaryValues['military'] = re.search(r"fulltime, active military duty.\n(.*)\n", summary).group(1)
+    if year < 2018:
+        ###military service:  use seperate dictionary since this will be blank for most students###
+        # note: this is for old years, will not work for 2018
+        #regular expression to extract all military information
+        milRE = re.compile(r"1. Have you served or are you now serving.*\n(.*)\n"
+                        "2. What period.*\n(.*)\n(.*?)\n"
+                        "3. Rank\n(.*?)\n"
+                        "4. Expected military reserve or National Guard.*?\n(.*?)\n")
+        mil = re.search(milRE, summary)
+        #only add military items if person is in the military
+        if mil.group(1)[0] == 'Y':
+            military = {}
+            military['milService'] = 'yes'
+            military['milStart'] = mil.group(2)
+            military['milEnd'] = mil.group(3)
+            military['milRank'] = mil.group(4)
+            military['milReserve'] = mil.group(5)
+            
+            # add dictionary of education values to summary dictionary
+            summaryValues['military'] = military
+
+    elif year == 2018:
+
+        # military service for 2018 applications
+        summaryValues['military'] = re.search(r"fulltime, active military duty.\n(.*)\n", summary).group(1)
     
     # employment: multiple entries
     #regular expression to extract all employment
@@ -236,7 +237,7 @@ def app_to_dict_18(filename):
     return summaryValues
 
 
-def create_dataframe(directory, file_list):
+def create_dataframe(directory, file_list, year):
     
     '''
     This function converts the dictionary of application information that was
@@ -264,8 +265,9 @@ def create_dataframe(directory, file_list):
     # where ech element of the list is a single dictionary for a student
     for file in file_list:
         print(file)
+
         try:
-            app_dict = app_to_dict_18(directory + file)
+            app_dict = app_to_dict_18(directory + file, year)
             lsac_num = app_dict['LSAC']
         except:
             error_filenames.append(file)

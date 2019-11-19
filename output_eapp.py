@@ -9,13 +9,16 @@ import os
 import sys
 import numpy as np
 import zipfile
+import re
 
 def main():
 
         #zip_file = 'applications/app_2016.zip'
-        zip_file = sys.argv[1]
-        year = sys.argv[2]
-        output_type = sys.argv[3]
+        
+        year = re.findall(r'\d{4}', sys.argv[1])
+        year = int(year[0])
+        output_type = sys.argv[2]
+        zip_file = sys.argv[3]
 
         pdf_dir = 'pdf'
 
@@ -25,7 +28,7 @@ def main():
         # convert all applications to data frames
         file_list = os.listdir(pdf_dir)
 
-        db_tbls = extract.create_dataframe(pdf_dir, file_list[:3])
+        db_tbls = extract.create_dataframe(pdf_dir, file_list[:3], year)
 
         # clean up hours work week columns
         db_tbls = convert_cols(db_tbls)
@@ -51,14 +54,14 @@ def output_csv_sql(to_db, output_type):
         engine = create_engine('sqlite:///student_db.db')
 
         # iterate through tables, inserting into database or exporting csv files
-        if output_type == 'csv':
+        if output_type == '--csv':
                 # make new directory to store csv files
                 os.mkdir('eapp')
                 # iterate through each table, writing out file
                 for tbl, tbl_name in zip(to_db, tbl_names):
                       tbl.to_csv(tbl_name + 'csv', index = False)  
                         
-        elif output_type == 'sql': 
+        elif output_type == '--sql': 
                 # connect to database
                 engine = create_engine('sqlite:///student_db.db')
 
