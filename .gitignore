@@ -1,2 +1,4 @@
 *.pdf
 *cpython*
+*.db
+*.zip

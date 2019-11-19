@@ -134,7 +134,7 @@ def app_to_dict_18(filename):
     # extract education
     summaryValues['education'] = extract.extract_multi(summary, educationRE, edKeys)
     
-    '''     
+    '''   
     ###military service:  use seperate dictionary since this will be blank for most students###
     # note: this is for old years, will not work for 2018
     #regular expression to extract all military information
@@ -154,8 +154,8 @@ def app_to_dict_18(filename):
         
         # add dictionary of education values to summary dictionary
         summaryValues['military'] = military
-    '''
     
+    '''
     # military service for 2018 applications
     summaryValues['military'] = re.search(r"fulltime, active military duty.\n(.*)\n", summary).group(1)
     
@@ -242,7 +242,7 @@ def create_dataframe(directory, file_list):
     This function converts the dictionary of application information that was
     produced by app_to_dict_18 and converts it to data frames
     '''
-    
+
     # initiate list to store filenames of errors
     error_filenames = []
        
@@ -270,7 +270,6 @@ def create_dataframe(directory, file_list):
         except:
             error_filenames.append(file)
             print('break with ' + file)        
-    
         # convert dictionaries of individual students to tables for the database
         # don't clean data (such as names) yet, wait until entire data frame is constructed
         # so cleaning can be vectorized
