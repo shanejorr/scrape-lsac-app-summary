@@ -1,19 +1,17 @@
 """
 This program takes the data frames of each table and enters them into the SQL database.
-sys.argv[1]
+
 """
 import pandas as pd
 from sqlalchemy import create_engine
 import app_extract_18 as extract
-import os
+import os, shutil
 import sys
 import numpy as np
 import zipfile
 import re
 
 def main():
-
-        #zip_file = 'applications/app_2016.zip'
         
         year = re.findall(r'\d{4}', sys.argv[1])
         year = int(year[0])
@@ -28,7 +26,7 @@ def main():
         # convert all applications to data frames
         file_list = os.listdir(pdf_dir)
 
-        db_tbls = extract.create_dataframe(pdf_dir, file_list[:3], year)
+        db_tbls = extract.create_dataframe(pdf_dir + '/', file_list[:3], year)
 
         # clean up hours work week columns
         db_tbls = convert_cols(db_tbls)
@@ -36,12 +34,13 @@ def main():
         # create tables to place in dataframe
         to_db = create_db_tables(db_tbls)
 
-        # files = db_tbls[3]
-
         del db_tbls
 
         # output to either csv files or sqlite database
         output_csv_sql(to_db, output_type)
+
+        # delete the unzipped pdf applications
+        shutil.rmtree(pdf_dir)
 
 # output to csv file or sqlite database
 def output_csv_sql(to_db, output_type):
@@ -59,7 +58,7 @@ def output_csv_sql(to_db, output_type):
                 os.mkdir('eapp')
                 # iterate through each table, writing out file
                 for tbl, tbl_name in zip(to_db, tbl_names):
-                      tbl.to_csv(tbl_name + 'csv', index = False)  
+                      tbl.to_csv('eapp/' + tbl_name + 'csv', index = False)  
                         
         elif output_type == '--sql': 
                 # connect to database
