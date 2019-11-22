@@ -64,15 +64,14 @@ def app_to_dict_18(filename, year):
     
     # remove header information that is on all pages
     # must remove after extracting name and lsat, because these might be removed
-    app_year = '2018'
     header = re.compile(r"\nElon University School of Law\n"
-                        "Fall " + app_year + " - Application\n"
+                        "Fall " + str(year) + " - Application\n"
                         ".*?\n"
                         "L.*?\n")
     summary = re.sub(header, '\n', summary)
     
     school_header = re.compile(r"\nElon University School of Law\n"
-                               "Fall " + app_year + " - Application\n")
+                               "Fall " + str(year) + " - Application\n")
     summary = re.sub(school_header, '\n', summary)
     
     summaryValues['date'] = re.search(r"Transmission Date and Time: (\d+/\d+/\d+)", summary).group(1)
