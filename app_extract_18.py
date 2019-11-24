@@ -47,13 +47,14 @@ def app_to_dict_18(filename, year):
     """
     
     #extract application summary
-    summary = extract.deleteDuplicateLines(filename) #, 'Application', 'Personal')
+    summary = extract.deleteDuplicateLines(filename)
     
     # save output of summary to text file for printing
     #with open("eapp_output_nopage.txt", "w") as text_file:
     #    print(f"{summary}", file=text_file)
     
     #remove page number text
+
     summary = re.sub(r'\nPage [0-9]+\n.*\nL[0-9]+\nElon.*\nFall.*\n', '\n', summary)
     summary = re.sub(r'\nPage [0-9]+\n', '\n', summary)
     
@@ -133,32 +134,11 @@ def app_to_dict_18(filename, year):
     # extract education
     summaryValues['education'] = extract.extract_multi(summary, educationRE, edKeys)
     
-    if year < 2018:
-        ###military service:  use seperate dictionary since this will be blank for most students###
-        # note: this is for old years, will not work for 2018
-        #regular expression to extract all military information
-        milRE = re.compile(r"1. Have you served or are you now serving.*\n(.*)\n"
-                        "2. What period.*\n(.*)\n(.*?)\n"
-                        "3. Rank\n(.*?)\n"
-                        "4. Expected military reserve or National Guard.*?\n(.*?)\n")
-        mil = re.search(milRE, summary)
-        #only add military items if person is in the military
-        if mil.group(1)[0] == 'Y':
-            military = {}
-            military['milService'] = 'yes'
-            military['milStart'] = mil.group(2)
-            military['milEnd'] = mil.group(3)
-            military['milRank'] = mil.group(4)
-            military['milReserve'] = mil.group(5)
-            
-            # add dictionary of education values to summary dictionary
-            summaryValues['military'] = military
+    # we will only keep the variable of whether person was in military
+    # years prior to 2018 have other variables, but 2018 only has this variable
+    # so, for consistency we will only keep this variable
+    summaryValues['military'] = re.search(r"1. Have you.*fulltime, active military duty.\n(.*)\n", summary).group(1)
 
-    elif year == 2018:
-
-        # military service for 2018 applications
-        summaryValues['military'] = re.search(r"fulltime, active military duty.\n(.*)\n", summary).group(1)
-    
     # employment: multiple entries
     #regular expression to extract all employment
     employmentRE = re.compile(r"\n(.*?)\n" #employer name
@@ -242,9 +222,6 @@ def create_dataframe(directory, file_list, year):
     This function converts the dictionary of application information that was
     produced by app_to_dict_18 and converts it to data frames
     '''
-
-    # initiate list to store filenames of errors
-    error_filenames = []
        
     # initialize dataframe that will act as tables
     large_df = pd.DataFrame()
@@ -263,14 +240,13 @@ def create_dataframe(directory, file_list, year):
     # iterate through each file, extract application information and store in list
     # where ech element of the list is a single dictionary for a student
     for file in file_list:
-        print(file)
 
         try:
             app_dict = app_to_dict_18(directory + file, year)
             lsac_num = app_dict['LSAC']
         except:
-            error_filenames.append(file)
-            print('break with ' + file)        
+            with open("error_log.txt", "a+") as text_file:
+                print(f"{file}; Year = {year}", file=text_file)      
         # convert dictionaries of individual students to tables for the database
         # don't clean data (such as names) yet, wait until entire data frame is constructed
         # so cleaning can be vectorized
@@ -366,4 +342,4 @@ def create_dataframe(directory, file_list, year):
     multi_tables[3]['lsac_num'] = multi_tables[3]['lsac_num'].str[1:].astype(int)
 
     # return a list of the tables that are needed
-    return [large_df, multi_tables, char_fit_large, error_filenames]
+    return [large_df, multi_tables, char_fit_large]

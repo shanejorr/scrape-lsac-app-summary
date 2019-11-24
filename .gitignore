@@ -2,3 +2,5 @@
 *cpython*
 *.db
 *.zip
+*.csv
+*.txt
