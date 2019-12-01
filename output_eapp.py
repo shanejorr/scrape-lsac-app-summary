@@ -4,20 +4,13 @@ This program takes the data frames of each table and enters them into the SQL da
 """
 import pandas as pd
 from sqlalchemy import create_engine
-import app_extract_18 as extract
+import app_extract as extract
 import os, shutil
 import sys
 import numpy as np
 import zipfile
 import re
-"""
-zip_file = 'applications/eapp_2015.zip'
-year = 2015
 
-filename = os.listdir('pdf')[0]
-
-extract.app_to_dict_18('pdf/' + filename, 2015)
-"""
 def main():
         
         year = re.findall(r'\d{4}', sys.argv[1])
@@ -35,7 +28,7 @@ def main():
         unzip_files(pdf_dir, zip_file)
 
         # convert all applications to data frames
-        file_list = os.listdir(pdf_dir)[40:80] # remove number to do whole file
+        file_list = os.listdir(pdf_dir)
 
         db_tbls = extract.create_dataframe(pdf_dir + '/', file_list, year)
 

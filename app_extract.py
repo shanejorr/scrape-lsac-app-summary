@@ -311,14 +311,6 @@ def create_dataframe(directory, file_list, year):
     # the following three variables repeat words; extract first letter
     large_df[['gender', 'latino', 'military']] = large_df[['gender', 'latino', 'military']] \
         .apply(lambda x: x.str[0])
-        
-    # the following variables for hours worked have repeating numbers; delete repeats
-    #try:
-    #    large_df['fullTime_job'] = hours_worked(large_df['fullTime_job'])
-    #except:
-    #    large_df['fullTime_job'] = 0
-    #multi_tables[2]['hours_week'] = hours_worked(multi_tables[2]['hours_week'])
-    #multi_tables[3]['hours_week'] = hours_worked(multi_tables[3]['hours_week'])
     
     # convert dates to consistent format
     large_df['date'] = pd.to_datetime(large_df['date'], infer_datetime_format=True).dt.date
