@@ -137,7 +137,7 @@ def app_to_dict_18(filename, year):
     # we will only keep the variable of whether person was in military
     # years prior to 2018 have other variables, but 2018 only has this variable
     # so, for consistency we will only keep this variable
-    summaryValues['military'] = re.search(r"1. Have you.*fulltime, active military duty.\n(.*)\n", summary).group(1)
+    summaryValues['military'] = re.search(r"1. Have you served or are you now .* active military duty.\n(.*)\n", summary).group(1)
 
     # employment: multiple entries
     #regular expression to extract all employment

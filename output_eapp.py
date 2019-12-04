@@ -11,6 +11,10 @@ import numpy as np
 import zipfile
 import re
 
+# file_list = os.listdir('pdf')
+
+# app = extract.app_to_dict_18('pdf/' + file_list[0], 2013)
+
 def main():
         
         year = re.findall(r'\d{4}', sys.argv[1])
