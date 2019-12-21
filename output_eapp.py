@@ -11,10 +11,6 @@ import numpy as np
 import zipfile
 import re
 
-# file_list = os.listdir('pdf')
-
-# app = extract.app_to_dict_18('pdf/' + file_list[0], 2013)
-
 def main():
         
         year = re.findall(r'\d{4}', sys.argv[1])
@@ -40,22 +36,29 @@ def main():
         db_tbls = convert_cols(db_tbls)
 
         # create tables to place in dataframe
-        to_db = create_db_tables(db_tbls)
+        to_db = create_db_tables(db_tbls, year)
 
         del db_tbls
 
         # output to either csv files or sqlite database
-        output_csv_sql(to_db, output_type)
+        output_csv_sql(to_db, output_type, year)
 
         # delete the unzipped pdf applications
         shutil.rmtree(pdf_dir)
 
 # output to csv file or sqlite database
-def output_csv_sql(to_db, output_type):
+def output_csv_sql(to_db, output_type, year):
 
         # create list of table names
-        tbl_names = ['demographic_a', 'name_a', 'app_status_a', 'parents_a', 'char_fit_a', 
-                'lsat_a', 'education_a', 'employment_a', 'extracurricular_a']
+
+        # there is no character and fitness table for 2013
+        if year == 2013:
+                tbl_names = ['demographic_a', 'name_a', 'app_status_a', 'parents_a',  
+                        'lsat_a', 'education_a', 'employment_a', 'extracurricular_a']
+
+        else:
+                tbl_names = ['demographic_a', 'name_a', 'app_status_a', 'parents_a', 'char_fit_a', 
+                        'lsat_a', 'education_a', 'employment_a', 'extracurricular_a'] 
 
         # connect to database
         engine = create_engine('sqlite:///student_db.db')
@@ -154,7 +157,7 @@ def convert_cols(db_tbls):
         return db_tbls
 
 ### create tables to insert into database
-def create_db_tables(db_tbls):
+def create_db_tables(db_tbls, year):
 
         demographic_vars = ['LSAC', 'birthDate', 'birthPlace', 'race', 'latino', 'gender', 'military',
                         'fullTime_job', 'citizenship', 'countryCitizen']
@@ -168,13 +171,24 @@ def create_db_tables(db_tbls):
         parents_a = db_tbls[0].loc[:, parent_vars].drop_duplicates()
 
         # create list of tables
-        to_db = [demographic_a, name_a, app_status_a, parents_a,
-                db_tbls[2].drop_duplicates(), # character and fitness
-                db_tbls[1][0].drop_duplicates(), # lsat
-                db_tbls[1][1].drop_duplicates(), # education
-                db_tbls[1][2].drop_duplicates(), # employment
-                db_tbls[1][3].drop_duplicates() # extracurricular
-                ]
+
+        if year != 2013:
+                to_db = [demographic_a, name_a, app_status_a, parents_a,
+                        db_tbls[2].drop_duplicates(), # character and fitness
+                        db_tbls[1][0].drop_duplicates(), # lsat
+                        db_tbls[1][1].drop_duplicates(), # education
+                        db_tbls[1][2].drop_duplicates(), # employment
+                        db_tbls[1][3].drop_duplicates() # extracurricular
+                        ]
+        
+        # no character and fitness table if year equals 2013
+        elif year == 2013:
+                to_db = [demographic_a, name_a, app_status_a, parents_a,
+                        db_tbls[1][0].drop_duplicates(), # lsat
+                        db_tbls[1][1].drop_duplicates(), # education
+                        db_tbls[1][2].drop_duplicates(), # employment
+                        db_tbls[1][3].drop_duplicates() # extracurricular
+                        ]
         
         return to_db
 

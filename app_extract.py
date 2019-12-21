@@ -137,7 +137,8 @@ def app_to_dict_18(filename, year):
     # we will only keep the variable of whether person was in military
     # years prior to 2018 have other variables, but 2018 only has this variable
     # so, for consistency we will only keep this variable
-    summaryValues['military'] = re.search(r"1. Have you served or are you now .* active military duty.\n(.*)\n", summary).group(1)
+
+    summaryValues['military'] = re.search(r"1. Have you served or are you now.*active military.*\n(.*)\n", summary).group(1)
 
     # employment: multiple entries
     #regular expression to extract all employment
@@ -179,39 +180,43 @@ def app_to_dict_18(filename, year):
     summaryValues['extracurricular'] = extract.extract_multi(summary, extraRE, extraKeys)
     
     # character and fitness
-    # create own dictionary for character and fitness, and add dictionary to main
-    # a seperate dictionary is used because this information may not be needed and
-    # will be its own table in database
-    
-    # create one RE to extract all character and fitness answers
-    char_fit_re = re.compile(r"\n(.*?)\n"
-                              "2. Are there any academic[\s\S]*\n(.*?)\n"
-                              "3. Have you ever been reprimanded[\s\S]*\n(.*?)\n"
-                              "4. Have you ever been suspended[\s\S]*\n(.*?)\n"
-                              "5. Have you ever received a citation[\s\S]*\n(.*?)\n"
-                              "6. Have you ever been convicted[\s\S]*\n(.*?)\n"
-                              "7. Are there any criminal charges pending[\s\S]*\n(.*?)\n"
-                              "8. Have you ever been requested[\s\S]*\n(.*?)\n"
-                              "9. Have you ever been disciplined[\s\S]*\n(.*?)\n"
-                              "10. Have you ever been dismissed[\s\S]*\n(.*?)\n"
-                              "11. Has a judgment been entered[\s\S]*\n(.*?)\n"
-                              "14. Early Decision Agreement")
-    
-    # dictionary key names for character and fitness entries
-    char_fit_names = ['academic_probation', 'academic_infractions', 'academic_discipline',
-                      'academic_suspension', 'criminal_charge', 'criminal_conviction',
-                      'criminal_pending', 'criminal_appearance', 'employee_discipline', 
-                      'employee_dismissal', 'civil_judgement']
-    
-    # initialize dictionary
-    char_fit = {}
-    
-    # add values to dictionary
-    for i, key_name in zip(range(1,len(char_fit_names)+1), char_fit_names):
-        char_fit[key_name] = re.search(char_fit_re, summary).group(i)
+
+    # don't do character and fitness for 2013 since it it in a different format
+    if year != 2013:
+
+        # create own dictionary for character and fitness, and add dictionary to main
+        # a seperate dictionary is used because this information may not be needed and
+        # will be its own table in database
         
-    #add character and fitness dictionary to main dictionary
-    summaryValues['char_fit'] = char_fit
+        # create one RE to extract all character and fitness answers
+        char_fit_re = re.compile(r"\n(.*?)\n"
+                                "2. Are there any academic[\s\S]*\n(.*?)\n"
+                                "3. Have you ever been reprimanded[\s\S]*\n(.*?)\n"
+                                "4. Have you ever been suspended[\s\S]*\n(.*?)\n"
+                                "5. Have you ever received a citation[\s\S]*\n(.*?)\n"
+                                "6. Have you ever been convicted[\s\S]*\n(.*?)\n"
+                                "7. Are there any criminal charges pending[\s\S]*\n(.*?)\n"
+                                "8. Have you ever been requested[\s\S]*\n(.*?)\n"
+                                "9. Have you ever been disciplined[\s\S]*\n(.*?)\n"
+                                "10. Have you ever been dismissed[\s\S]*\n(.*?)\n"
+                                "11. Has a judgment been entered[\s\S]*\n(.*?)\n"
+                                "14. Early Decision Agreement")
+        
+        # dictionary key names for character and fitness entries
+        char_fit_names = ['academic_probation', 'academic_infractions', 'academic_discipline',
+                        'academic_suspension', 'criminal_charge', 'criminal_conviction',
+                        'criminal_pending', 'criminal_appearance', 'employee_discipline', 
+                        'employee_dismissal', 'civil_judgement']
+        
+        # initialize dictionary
+        char_fit = {}
+        
+        # add values to dictionary
+        for i, key_name in zip(range(1,len(char_fit_names)+1), char_fit_names):
+            char_fit[key_name] = re.search(char_fit_re, summary).group(i)
+            
+        #add character and fitness dictionary to main dictionary
+        summaryValues['char_fit'] = char_fit
     
     return summaryValues
 
@@ -234,7 +239,13 @@ def create_dataframe(directory, file_list, year):
                     pd.DataFrame()]    
     
     # create sets of key names of keys that contain multiple entries per student
-    multi_entries = {"char_fit", "education", "employment", "extracurricular", "lsat"}
+
+    # only include character and fitness if year does not equal 2013
+    if year != 2013:
+        multi_entries = {"char_fit", "education", "employment", "extracurricular", "lsat"}
+    else:
+        multi_entries = {"education", "employment", "extracurricular", "lsat"}
+
     multi_no_cf = {"education", "employment", "extracurricular", "lsat"}
     
     # iterate through each file, extract application information and store in list
@@ -262,12 +273,13 @@ def create_dataframe(directory, file_list, year):
         # add single entry items to dataframe holding single entry items
         large_df = large_df.append(student_df)
         
-        # create table for character and fitness
-        char_fit_single = pd.DataFrame.from_dict(app_dict['char_fit'], orient='index').T
-        # add lsac number to character and fitness table
-        char_fit_single['lsac_num'] = lsac_num
-        # combine with large character and fitness table
-        char_fit_large = char_fit_large.append(char_fit_single)
+        if year != 2013:
+            # create table for character and fitness
+            char_fit_single = pd.DataFrame.from_dict(app_dict['char_fit'], orient='index').T
+            # add lsac number to character and fitness table
+            char_fit_single['lsac_num'] = lsac_num
+            # combine with large character and fitness table
+            char_fit_large = char_fit_large.append(char_fit_single)
         
         # pull out dictionary keys where there may be multiple values per student
         def with_keys(d, keys):
@@ -296,9 +308,10 @@ def create_dataframe(directory, file_list, year):
     
     # clean data frames by removing repeat words
     
-    # character and fitness Yes and no columns repeat the words multiple times; only keep first letter
-    char_fit_large.loc[:, char_fit_large.columns != 'lsac_num'] = char_fit_large.loc[:, char_fit_large.columns != 'lsac_num'] \
-        .apply(lambda x: x.str[0])
+    if year != 2013:
+        # character and fitness Yes and no columns repeat the words multiple times; only keep first letter
+        char_fit_large.loc[:, char_fit_large.columns != 'lsac_num'] = char_fit_large.loc[:, char_fit_large.columns != 'lsac_num'] \
+            .apply(lambda x: x.str[0])
     
     multi_tables[2]['during_school'] = multi_tables[2]['during_school'].str[0]
     
@@ -327,11 +340,15 @@ def create_dataframe(directory, file_list, year):
     
     # remove 'L' from lsac_num and convert to integer
     large_df['LSAC'] = large_df['LSAC'].str[1:].astype(int)
-    char_fit_large['lsac_num'] = char_fit_large['lsac_num'].str[1:].astype(int)
+    if year != 2013:
+        char_fit_large['lsac_num'] = char_fit_large['lsac_num'].str[1:].astype(int)
     multi_tables[0]['lsac_num'] = multi_tables[0]['lsac_num'].str[1:].astype(int)
     multi_tables[1]['lsac_num'] = multi_tables[1]['lsac_num'].str[1:].astype(int)
     multi_tables[2]['lsac_num'] = multi_tables[2]['lsac_num'].str[1:].astype(int)
     multi_tables[3]['lsac_num'] = multi_tables[3]['lsac_num'].str[1:].astype(int)
 
     # return a list of the tables that are needed
-    return [large_df, multi_tables, char_fit_large]
+    if year != 2013:
+        return [large_df, multi_tables, char_fit_large]
+    else:
+        return [large_df, multi_tables]
