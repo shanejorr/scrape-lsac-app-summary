@@ -1,9 +1,9 @@
-# Scrape LSAT Application Summary PDF Files
+# Scrape LSAC Application Summary PDF Files
 
-PDF scrapper of LSAC application summary.
+PDF scrapper of LSAC application summary files. The program can be run from the command line. It has three parameters:
 
-The only file that needs to be ran is `output_eapp.py`.  Users will need to change the path to the application PDF files with the `directory` object on line 11.  After chaning the directory and running the file, application information will be placed into a SQLite database called `student_db.db` in the root directory.
+1. Year of the applications (integer)
+2. Type of output (currently, must be csv)
+3. Path to file that contains LSAC summary reports for the year.
 
-done: 2018, 2017, 2016, 2015, 2014, 2013
-
-To run program: `python output_eapp.py --2013 --csv 'applications/eapp_2013.zip'`
+Example: `python output_eapp.py --2013 --csv 'applications/eapp_2013.zip'`
